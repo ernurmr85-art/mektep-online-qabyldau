@@ -1,0 +1,45 @@
+
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Мектепке онлайн өтінім беру және өтінім мәртебесін бақылау.">
+  <meta name="theme-color" content="#f4f6fb">
+  <title>{% block title %}Мектепке қабылдау{% endblock %} · Mektep</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/portal.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Мазмұнға өту</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i></span><span>Mektep<span class="brand-dot">.</span></span></a>
+      <nav aria-label="Негізгі мәзір">
+        <a {% if request.url.path == '/' %}aria-current="page"{% endif %} href="/">Басты бет</a>
+        <a {% if request.url.path.startswith('/directions') %}aria-current="page"{% endif %} href="/directions">Қабылдау бағыттары</a>
+        {% if user %}
+          <a {% if request.url.path.startswith(('/admin', '/cabinet')) %}aria-current="page"{% endif %} href="/account">{{ 'Комиссия' if user.role == 'admin' else 'Менің өтінімдерім' }}</a>
+        {% endif %}
+      </nav>
+      {% if user %}
+        <form method="post" data-api="/api/auth/logout" data-next="/">
+          <button class="button button-outline button-small" type="submit">Шығу</button>
+          <output class="form-message header-error" role="alert"></output>
+        </form>
+      {% else %}
+        <a class="button button-outline button-small" href="/login">Кіру</a>
+      {% endif %}
+    </div>
+  </header>
+  <main id="content" class="shell {% block main_class %}page{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <span><strong>Mektep.</strong> Мектепке онлайн қабылдау</span>
+      <span>Оқу жобасы <span aria-hidden="true">·</span> <a href="/docs">API құжаттамасы</a></span>
+    </div>
+  </footer>
+</body>
+</html>

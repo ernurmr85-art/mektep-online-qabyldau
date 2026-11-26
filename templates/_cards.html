@@ -1,0 +1,15 @@
+
+{% macro direction_card(direction, languages) %}
+  <article class="direction-card">
+    <div class="card-top">
+      <span class="grade-tag">{{ direction.grade }}-сынып</span>
+      <span class="pill {{ 'accepted' if direction.accepting else 'draft' }}">{{ 'Қабылдау ашық' if direction.accepting else 'Қабылдау жабық' }}</span>
+    </div>
+    <h3><a href="/directions/{{ direction.id }}">{{ direction.title }}</a></h3>
+    <p>{{ languages[direction.language] }}</p>
+    <div class="card-foot">
+      <span>{{ direction.opens_on.strftime('%d.%m') }}–{{ direction.closes_on.strftime('%d.%m.%Y') }}</span>
+      <a class="action-link" href="/directions/{{ direction.id }}">Толығырақ<span class="sr-only"> · {{ direction.title }}</span></a>
+    </div>
+  </article>
+{% endmacro %}

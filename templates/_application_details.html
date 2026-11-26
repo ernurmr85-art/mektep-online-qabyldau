@@ -1,0 +1,28 @@
+
+{% macro attachment_list(item) %}
+  {% if item.attachments %}
+    <ul class="attachment-list">
+      {% for attachment in item.attachments %}
+        <li>
+          <strong>{{ attachment.document }}</strong>
+          <a href="/api/applications/{{ item.id }}/attachments/{{ attachment.id }}">{{ attachment.filename }}</a>
+          <span class="record-meta">{{ (attachment.size / 1024) | round(1) }} КБ</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Құжаттар жүктелмеген.</p>
+  {% endif %}
+{% endmacro %}
+
+{% macro timeline(events, labels) %}
+  <ol class="timeline">
+    {% for event in events %}
+      <li>
+        <strong>{{ labels[event.kind] }}</strong>
+        <time class="record-meta" datetime="{{ event.occurred_at.isoformat() }}Z">{{ event.occurred_at | local_date('%d.%m.%Y %H:%M') }}</time>
+        {% if event.note %}<p class="preserve-lines">{{ event.note }}</p>{% endif %}
+      </li>
+    {% endfor %}
+  </ol>
+{% endmacro %}

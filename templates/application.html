@@ -1,0 +1,121 @@
+
+{% extends 'base.html' %}
+{% from '_application_details.html' import attachment_list, timeline %}
+{% block title %}{{ 'Өтінім № ' ~ item.id if item else 'Жаңа өтінім' }}{% endblock %}
+{% block content %}
+<a href="/cabinet" class="plain-link back">Менің өтінімдерім</a>
+<div class="page-heading">
+  {% if item %}<span class="pill {{ item.status }}">{{ statuses[item.status] }}</span>{% endif %}
+  <h1>{{ 'Өтінім № ' ~ item.id if item else 'Жаңа өтінім' }}</h1><p>{{ direction.title }} · {{ languages[direction.language] }}</p>
+</div>
+{% set editable = not item or item.status in ('draft', 'revision') %}
+<div class="detail-layout">
+  <div class="stack">
+    <section class="panel">
+      {% if not item or item.status == 'draft' %}<p class="field-hint application-note">Оқу жобасын тек үлгі деректермен тексеріңіз.</p>{% endif %}
+      {% if editable %}
+        <h2>Оқушы және ата-ана деректері</h2>
+        <form method="post" class="stack" id="application-form" data-api="{{ '/api/applications/' ~ item.id if item else '/api/applications' }}" data-method="{{ 'PUT' if item else 'POST' }}" data-next="{{ '/cabinet/' ~ item.id if item else '/cabinet/{id}' }}">
+          {% if not item %}<input type="hidden" name="direction_id" value="{{ direction.id }}" data-number>{% endif %}
+          <label>Оқушының аты-жөні <input name="student_name" value="{{ item.student_name if item else '' }}" required minlength="2" maxlength="100"></label>
+          <label>Оқушының ЖСН-і <input name="iin" value="{{ item.iin if item else '' }}" inputmode="numeric" required minlength="12" maxlength="12" pattern="[0-9]{12}" aria-describedby="iin-hint"></label>
+          <p class="field-hint" id="iin-hint">12 цифр.</p>
+          <label>Ата-ананың немесе заңды өкілдің аты-жөні <input name="parent_name" value="{{ item.parent_name if item else user.full_name }}" required minlength="2" maxlength="100"></label>
+          <label>Байланыс телефоны <input name="phone" type="tel" autocomplete="tel" value="{{ item.phone if item else '' }}" placeholder="+7 700 000 00 00" required minlength="9" maxlength="20"></label>
+          <label>Тұрғылықты мекенжай <input name="address" autocomplete="street-address" value="{{ item.address if item else '' }}" required minlength="5" maxlength="255"></label>
+          <div><button class="button" type="submit">{{ 'Өзгерістерді сақтау' if item else 'Жобаны сақтау' }}</button></div>
+          <output class="form-message" role="alert"></output>
+        </form>
+      {% else %}
+        <h2>Өтінім деректері</h2>
+        <dl class="facts">
+          <div><dt>Оқушы</dt><dd>{{ item.student_name }}</dd></div>
+          <div><dt>Ата-ана немесе заңды өкіл</dt><dd>{{ item.parent_name }}</dd></div>
+          <div><dt>Телефон</dt><dd>{{ item.phone }}</dd></div>
+          <div><dt>Мекенжай</dt><dd>{{ item.address }}</dd></div>
+        </dl>
+      {% endif %}
+    </section>
+    {% if item %}
+      <section class="panel" id="documents">
+        <h2>Өтінім құжаттары</h2>
+        {% if editable %}
+          {% set uploaded = item.attachments | map(attribute='document') | list %}
+          <ul class="attachment-list">
+            {% for slot in direction.document_slots %}
+              <li><strong>{{ slot }}</strong><span class="record-meta">{{ 'Жүктелді' if slot in uploaded else 'Жүктелмеген' }}</span></li>
+            {% endfor %}
+          </ul>
+          <form id="attachment-form" method="post" class="stack" data-api="/api/applications/{{ item.id }}/attachments" data-encoding="multipart" data-next="/cabinet/{{ item.id }}#documents" data-check-form="application-form">
+            <label>Құжат түрі
+              <select name="document" required>
+                <option value="">Таңдаңыз</option>
+                {% for slot in direction.document_slots %}<option value="{{ slot }}">{{ slot }}</option>{% endfor %}
+              </select>
+            </label>
+            <label>Файл <input name="file" type="file" accept=".pdf,.png,.jpg,.jpeg" required aria-describedby="file-hint"></label>
+            <p class="field-hint" id="file-hint">PDF, PNG немесе JPEG. Бір файл — 5 МБ-қа дейін. Сол құжат түрін қайта жүктесеңіз, файл ауыстырылады.</p>
+            <div><button type="submit" class="button button-outline">Файлды жүктеу</button></div>
+            <output class="form-message" role="alert"></output>
+          </form>
+          {% if item.attachments %}
+            <h3 class="file-heading">Жүктелген файлдар</h3>
+            <ul class="attachment-list">
+              {% for attachment in item.attachments %}
+                <li>
+                  <strong>{{ attachment.document }}</strong>
+                  <a href="/api/applications/{{ item.id }}/attachments/{{ attachment.id }}">{{ attachment.filename }}</a>
+                  <form method="post" data-api="/api/applications/{{ item.id }}/attachments/{{ attachment.id }}" data-method="DELETE" data-next="/cabinet/{{ item.id }}#documents" data-check-form="application-form" data-confirm="Құжатты жоясыз ба?">
+                    <button type="submit" class="button button-outline button-small danger-link">Жою</button>
+                    <output class="form-message" role="alert"></output>
+                  </form>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% else %}
+          {{ attachment_list(item) }}
+        {% endif %}
+      </section>
+    {% endif %}
+  </div>
+  <div class="stack">
+    <aside class="panel">
+      <h2>Өтінім барысы</h2>
+      {% if not item %}
+        <p>Алдымен жобаны сақтаңыз. Содан кейін құжаттарды жүктеп, өтінімді комиссияға жіберіңіз.</p>
+      {% elif editable %}
+        {% if item.status == 'revision' %}
+          <p class="notice preserve-lines">{{ item.decision_note }}</p>
+        {% else %}
+          <p>Деректер мен құжаттарды тексеріңіз. Комиссия қажет болса өтінімді толықтыруға қайтарады.</p>
+        {% endif %}
+        {% if direction.accepting or item.status == 'revision' %}
+          <form method="post" class="stack" data-api="/api/applications/{{ item.id }}/submit" data-next="/cabinet/{{ item.id }}" data-check-form="application-form" data-check-upload="attachment-form">
+            <button class="button" type="submit">{{ 'Комиссияға қайта жіберу' if item.status == 'revision' else 'Комиссияға жіберу' }}</button>
+            <output class="form-message" role="alert"></output>
+          </form>
+        {% else %}<p class="notice">Бұл бағыт бойынша қабылдау жабық.</p>{% endif %}
+        {% if item.status == 'draft' %}
+          <form method="post" class="stack delete-form" data-api="/api/applications/{{ item.id }}" data-method="DELETE" data-next="/cabinet" data-confirm="Өтінім жобасын жоясыз ба?">
+            <button class="button button-outline danger-link" type="submit">Жобаны жою</button>
+            <output class="form-message" role="alert"></output>
+          </form>
+        {% endif %}
+      {% else %}
+        <p><strong>Соңғы жіберілген күні</strong><br>{{ item.submitted_at | local_date }}</p>
+        {% if item.decided_at %}<p><strong>Шешім күні</strong><br>{{ item.decided_at | local_date }}</p>{% endif %}
+        {% if item.decision_note %}<p class="preserve-lines">{{ item.decision_note }}</p>{% endif %}
+        {% if item.status == 'pending' %}<p>Комиссия өтінімді қарап жатыр.</p>{% endif %}
+        {% if item.status == 'waitlisted' %}<p><strong>Кезектегі орын: {{ wait_position }}</strong></p><p>Бос орын болғанда комиссия өтінімдерді кезек ретімен қарайды.</p>{% endif %}
+      {% endif %}
+    </aside>
+    {% if item %}
+      <section class="panel">
+        <h2>Өтінім тарихы</h2>
+        {{ timeline(item.events, event_labels) }}
+      </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

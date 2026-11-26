@@ -1,0 +1,40 @@
+
+{% extends 'base.html' %}
+{% from '_cards.html' import direction_card %}
+{% block title %}Қабылдау бағыттары{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <h1>Қабылдау бағыттары</h1>
+  <p>Сынып пен оқыту тілін таңдаңыз. Өтінім беру мерзімі әр бағыттың карточкасында көрсетілген.</p>
+</div>
+<form class="panel filters" action="/directions">
+  <label>Бағыт атауы <input name="q" type="search" maxlength="100" placeholder="Мысалы, бастауыш" value="{{ filters.q | default('') }}"></label>
+  <label>Сынып
+    <select name="grade">
+      <option value="">Барлық сынып</option>
+      {% for grade in range(1, 12) %}<option value="{{ grade }}" {% if filters.grade == grade %}selected{% endif %}>{{ grade }}-сынып</option>{% endfor %}
+    </select>
+  </label>
+  <label>Оқыту тілі
+    <select name="language">
+      <option value="">Барлық тіл</option>
+      {% for key, language in languages.items() %}<option value="{{ key }}" {% if filters.language == key %}selected{% endif %}>{{ language }}</option>{% endfor %}
+    </select>
+  </label>
+  <button class="button" type="submit">Іздеу</button>
+  {% if filters %}<a href="/directions" class="plain-link">Тазарту</a>{% endif %}
+</form>
+<p class="result-count">{{ result.total }} бағыт табылды</p>
+{% if result.items %}
+  <div class="cards">{% for direction in result.items %}{{ direction_card(direction, languages) }}{% endfor %}</div>
+  {% if result.pages > 1 %}
+    <nav class="pagination" aria-label="Каталог беттері">
+      {% if links.get(result.page - 1) %}<a class="button button-outline button-small" href="{{ links[result.page - 1] }}">Алдыңғы</a>{% endif %}
+      <span>{{ result.page }} / {{ result.pages }}</span>
+      {% if links.get(result.page + 1) %}<a class="button button-outline button-small" href="{{ links[result.page + 1] }}">Келесі</a>{% endif %}
+    </nav>
+  {% endif %}
+{% else %}
+  <p class="empty">Іздеу шарттарына сай бағыт табылмады.</p>
+{% endif %}
+{% endblock %}

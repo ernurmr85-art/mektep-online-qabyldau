@@ -1,0 +1,21 @@
+
+{% extends 'base.html' %}
+{% block title %}Менің өтінімдерім{% endblock %}
+{% block content %}
+<div class="page-heading section-heading">
+  <div><p class="eyebrow"><span></span> Ата-ана кабинеті</p><h1>Менің өтінімдерім</h1><p>{{ user.full_name }}</p></div>
+  <a class="button" href="/directions">Жаңа өтінім</a>
+</div>
+{% if applications %}
+  <div class="record-list">
+    {% for item in applications %}
+      <article class="panel record">
+        <div><p class="record-meta">№ {{ item.id }} · {{ item.created_at | local_date }}</p><h2><a href="/cabinet/{{ item.id }}">{{ item.direction.title }}</a></h2><p>{{ item.student_name }}</p></div>
+        <div class="record-action"><span class="pill {{ item.status }}">{{ statuses[item.status] }}</span><a class="action-link" href="/cabinet/{{ item.id }}">{{ 'Жобаны ашу' if item.status == 'draft' else ('Толықтыру' if item.status == 'revision' else 'Толығырақ') }}</a></div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty"><h2>Өтінімдер әлі жоқ</h2><p>Каталогтан бағыт таңдап, алғашқы өтініміңізді бастаңыз.</p><a class="button button-outline" href="/directions">Каталогты ашу</a></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,32 @@
+
+{% extends 'base.html' %}
+{% block title %}{{ direction.title }}{% endblock %}
+{% block content %}
+<a class="plain-link back" href="/directions">Қабылдау бағыттары</a>
+<div class="page-heading">
+  <span class="pill {{ 'accepted' if direction.accepting else 'draft' }}">{{ 'Қабылдау ашық' if direction.accepting else 'Қабылдау жабық' }}</span>
+  <h1>{{ direction.title }}</h1>
+  <p>{{ direction.description }}</p>
+</div>
+<div class="detail-layout">
+  <section class="panel">
+    <h2>Қажетті құжаттар</h2>
+    <ul class="document-list">{% for document in direction.documents.splitlines() if document.strip() %}<li>{{ document }}</li>{% endfor %}</ul>
+  </section>
+  <aside class="panel">
+    <h2>Қабылдау шарттары</h2>
+    <dl class="facts">
+      <div><dt>Сынып</dt><dd>{{ direction.grade }}-сынып</dd></div>
+      <div><dt>Оқыту тілі</dt><dd>{{ languages[direction.language] }}</dd></div>
+      <div><dt>Өтінім беру мерзімі</dt><dd>{{ direction.opens_on.strftime('%d.%m.%Y') }} – {{ direction.closes_on.strftime('%d.%m.%Y') }}</dd></div>
+      {% if direction.capacity is not none %}<div><dt>Бос орын</dt><dd>{{ direction.seats_remaining }} / {{ direction.capacity }}</dd></div>{% endif %}
+    </dl>
+    {% if direction.accepting and direction.seats_remaining == 0 %}<p class="notice">Бос орын болмаған кезде комиссия мақұлдаған өтінім күту тізіміне қосылады.</p>{% endif %}
+    {% if direction.accepting and not user %}
+      <a class="button" href="/login?direction={{ direction.id }}">Кіру және өтінім беру</a>
+    {% elif direction.accepting and user.role == 'parent' %}
+      <a class="button" href="/cabinet/new/{{ direction.id }}">Өтінім бастау</a>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

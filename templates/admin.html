@@ -1,0 +1,70 @@
+
+{% extends 'base.html' %}
+{% from '_application_details.html' import attachment_list, timeline %}
+{% block title %}Қабылдау комиссиясы{% endblock %}
+{% block content %}
+<div class="page-heading section-heading">
+  <div><p class="eyebrow"><span></span> Комиссия кабинеті</p><h1>Қабылдау комиссиясы</h1><p>Жіберілген өтінімдерді қарап, шешім енгізіңіз.</p></div>
+  <a class="button button-outline" href="/admin/directions">Бағыттарды басқару</a>
+</div>
+<form class="panel filters queue-filters" action="/admin">
+  <label>Өтінім нөмірі немесе аты-жөні
+    <input name="q" type="search" maxlength="100" value="{{ filters.q }}" placeholder="Мысалы, № 5">
+  </label>
+  <label>Бағыт
+    <select name="direction_id">
+      <option value="">Барлық бағыт</option>
+      {% for direction in directions %}<option value="{{ direction.id }}" {% if filters.direction_id == direction.id %}selected{% endif %}>{{ direction.title }} · {{ languages[direction.language] }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Мәртебе
+    <select name="status">
+      <option value="">Барлық мәртебе</option>
+      {% for status in ('pending', 'revision', 'waitlisted', 'accepted', 'rejected') %}<option value="{{ status }}" {% if filters.status == status %}selected{% endif %}>{{ statuses[status] }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Жіберілген күні, бастап <input type="date" name="date_from" value="{{ filters.date_from or '' }}"></label>
+  <label>Жіберілген күні, дейін <input type="date" name="date_to" value="{{ filters.date_to or '' }}"></label>
+  <div class="filter-actions"><button class="button" type="submit">Іздеу</button><a href="/admin" class="plain-link">Тазарту</a></div>
+</form>
+<p class="result-count">{{ applications | length }} өтінім табылды</p>
+<div class="record-list">
+  {% for item in applications %}
+    <details class="panel review">
+      <summary><span><strong>{{ item.student_name }}</strong><span class="record-meta">№ {{ item.id }} · {{ item.direction.title }} · {{ item.submitted_at | local_date }}</span></span><span class="pill {{ item.status }}">{{ statuses[item.status] }}</span></summary>
+      <div class="review-body">
+        <div class="detail-layout">
+          <div class="stack">
+            <dl class="facts">
+              <div><dt>Оқушының ЖСН-і</dt><dd>{{ item.iin }}</dd></div>
+              <div><dt>Ата-ананың аты-жөні</dt><dd>{{ item.parent_name }}</dd></div>
+              <div><dt>Байланыс телефоны</dt><dd>{{ item.phone }}</dd></div>
+              <div><dt>Мекенжай</dt><dd>{{ item.address }}</dd></div>
+              {% if item.direction.capacity is not none %}<div><dt>Бағыттағы бос орын</dt><dd>{{ item.direction.seats_remaining }} / {{ item.direction.capacity }}</dd></div>{% endif %}
+            </dl>
+            <div><h3>Құжаттар</h3>{{ attachment_list(item) }}</div>
+          </div>
+          <div><h3>Өтінім тарихы</h3>{{ timeline(item.events, event_labels) }}</div>
+        </div>
+        {% if item.status in ('pending', 'waitlisted') %}
+          {% if item.direction.seats_remaining == 0 %}<p class="notice">{{ 'Бос орын жоқ. Қабылдау шешімі өтінімді күту тізіміне қосады.' if item.status == 'pending' else 'Бос орын жоқ. Орын ашылғанда кезектегі алғашқы өтінімді қабылдауға болады.' }}</p>{% endif %}
+          <form method="post" class="stack decision-form" data-api="/api/applications/{{ item.id }}/decision" data-method="PUT" data-next="{{ target }}" data-confirm="Шешімді сақтайсыз ба?">
+            <label>Шешім
+              <select name="status" data-decision required>
+                <option value="">Таңдаңыз</option>
+                <option value="accepted" {% if item.status == 'waitlisted' and item.direction.seats_remaining == 0 %}disabled{% endif %}>{{ 'Күту тізіміне қосу' if item.status == 'pending' and item.direction.seats_remaining == 0 else 'Қабылдау' }}</option>
+                {% if item.status == 'pending' %}<option value="revision">Толықтыруға қайтару</option>{% endif %}
+                <option value="rejected">Бас тарту</option>
+              </select>
+            </label>
+            <label>Түсініктеме <textarea name="note" rows="3" maxlength="1000" aria-describedby="decision-hint-{{ item.id }}"></textarea></label>
+            <p class="field-hint" id="decision-hint-{{ item.id }}">Бас тарту немесе толықтыруға қайтару себебі міндетті.</p>
+            <div><button class="button" type="submit">Шешімді сақтау</button></div>
+            <output class="form-message" role="alert"></output>
+          </form>
+        {% endif %}
+      </div>
+    </details>
+  {% else %}<p class="empty">Бұл іздеу шарттары бойынша өтінім табылмады.</p>{% endfor %}
+</div>
+{% endblock %}

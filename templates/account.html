@@ -1,0 +1,52 @@
+
+{% extends 'base.html' %}
+{% block title %}{{ 'Тіркелу' if register else 'Жүйеге кіру' }}{% endblock %}
+{% block content %}
+<div class="auth-layout">
+  <div class="auth-cover">
+    <img src="/static/classroom.jpg" alt="">
+    <div><strong>Mektep.</strong><span>Мектепке онлайн қабылдау</span></div>
+  </div>
+  <section class="panel auth-panel">
+    <h1>{{ 'Тіркелу' if register else 'Жүйеге кіру' }}</h1>
+    <p>{{ 'Өтінім беру үшін ата-ана кабинетін ашыңыз.' if register else 'Өтінімдеріңізді қарау үшін жеке кабинетке кіріңіз.' }}</p>
+    {% if registered %}<p class="notice">Тіркелу сәтті аяқталды. Енді жүйеге кіре аласыз.</p>{% endif %}
+    {% set target = '?direction=' ~ direction if direction else '' %}
+    {% if register %}
+      <form method="post" class="stack" data-api="/api/auth/register" data-next="/login?registered=1{% if direction %}&amp;direction={{ direction }}{% endif %}">
+        <label>Аты-жөніңіз <input name="full_name" autocomplete="name" required minlength="2" maxlength="100"></label>
+        <label>Электрондық пошта <input name="email" type="email" maxlength="254" autocomplete="email" required></label>
+        <label>Құпиясөз <input name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="72"></label>
+        <p class="field-hint">Кемінде 8 таңба.</p>
+        <button class="button" type="submit">Тіркелу</button>
+        <output class="form-message" role="alert"></output>
+      </form>
+      <p class="account-switch">Тіркелгіңіз бар ма? <a href="/login{{ target }}">Кіру</a></p>
+    {% else %}
+      <form method="post" class="stack" data-api="/api/auth/token" data-encoding="form" data-next="/account{{ target }}">
+        <label>Электрондық пошта <input name="username" type="email" maxlength="254" autocomplete="username" required></label>
+        <label>Құпиясөз <input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="button" type="submit">Кіру</button>
+        <output class="form-message" role="alert"></output>
+      </form>
+      {% if demo_mode %}
+        <section class="demo-login" aria-labelledby="demo-heading">
+          <h2 id="demo-heading">Демо тіркелгілер</h2>
+          <p>Сайтты тіркелусіз, үлгі деректермен тексеріңіз.</p>
+          <div class="actions">
+            <form method="post" data-api="/api/auth/demo/parent" data-next="/account{{ target }}">
+              <button class="button button-outline" type="submit">Демо ата-ана</button>
+              <output class="form-message" role="alert"></output>
+            </form>
+            <form method="post" data-api="/api/auth/demo/admin" data-next="/admin">
+              <button class="button button-outline" type="submit">Демо комиссия</button>
+              <output class="form-message" role="alert"></output>
+            </form>
+          </div>
+        </section>
+      {% endif %}
+      <p class="account-switch">Тіркелгіңіз жоқ па? <a href="/register{{ target }}">Тіркелу</a></p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

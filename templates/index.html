@@ -1,0 +1,35 @@
+
+{% extends 'base.html' %}
+{% from '_cards.html' import direction_card %}
+{% block main_class %}home{% endblock %}
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-content">
+    <p class="eyebrow"><span></span> Ата-аналарға арналған портал</p>
+    <h1 id="hero-title">Мектепке<br>онлайн қабылдау<span class="hero-period">.</span></h1>
+    <p class="hero-intro">Сынып пен оқыту тілін таңдаңыз, өтінім жіберіңіз және қабылдау комиссиясының шешімін жеке кабинеттен көріңіз.</p>
+    <div class="actions">
+      <a class="button button-mint" href="/directions">Бағыттарды қарау</a>
+      <a class="button button-glass" href="/account">Жеке кабинет</a>
+    </div>
+  </div>
+  <figure class="hero-photo">
+    <img src="/static/classroom.jpg" alt="Оқулықтар мен қарындаштар қойылған мектеп сыныбы" fetchpriority="high">
+    <figcaption>Фото <a href="https://www.pexels.com/photo/school-bench-with-stationery-in-classroom-5905445/">Katerina Holmes · Pexels</a></figcaption>
+  </figure>
+</section>
+<section class="section" aria-labelledby="featured-title">
+  <div class="section-heading"><h2 id="featured-title">Қабылдау бағыттары</h2><a class="action-link" href="/directions">Барлық бағыттар</a></div>
+  {% if featured %}
+    <div class="cards">{% for direction in featured %}{{ direction_card(direction, languages) }}{% endfor %}</div>
+  {% else %}<p class="empty">Әзірге жарияланған бағыттар жоқ.</p>{% endif %}
+</section>
+<section class="section process" aria-labelledby="process-title">
+  <h2 id="process-title">Өтінім қалай беріледі?</h2>
+  <div class="cards">
+    <article><span class="process-number">01</span><h3>Бағытты таңдаңыз</h3><p>Сыныпты, оқыту тілін және қабылдау мерзімін тексеріңіз.</p></article>
+    <article><span class="process-number">02</span><h3>Өтінімді толтырыңыз</h3><p>Оқушы мен заңды өкілдің деректерін енгізіп, жобаны жіберіңіз.</p></article>
+    <article><span class="process-number">03</span><h3>Шешімді қадағалаңыз</h3><p>Өтінім мәртебесі мен комиссия түсініктемесі жеке кабинетте көрсетіледі.</p></article>
+  </div>
+</section>
+{% endblock %}

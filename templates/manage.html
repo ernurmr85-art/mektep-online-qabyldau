@@ -1,0 +1,15 @@
+
+{% extends 'base.html' %}
+{% block title %}Бағыттарды басқару{% endblock %}
+{% block content %}
+<a class="plain-link back" href="/admin">Қабылдау комиссиясы</a>
+<div class="page-heading section-heading">
+  <div><h1>Бағыттарды басқару</h1><p>Сыныптарды, қабылдау мерзімдерін және құжаттар тізімін реттеңіз.</p></div>
+  <a class="button" href="/admin/directions/new">Бағыт қосу</a>
+</div>
+<div class="record-list">
+  {% for item in directions %}
+    <article class="panel record"><div><p class="record-meta">{{ item.grade }}-сынып · {{ languages[item.language] }} · {{ item.accepted_count }} қабылданды{% if item.capacity is not none %} · {{ item.seats_remaining }} бос орын{% endif %}</p><h2>{{ item.title }}</h2></div><div class="record-action"><span class="pill {{ 'accepted' if item.active else 'draft' }}">{{ 'Каталогта көрінеді' if item.active else 'Жасырылған' }}</span><a class="action-link" href="/admin/directions/{{ item.id }}">Өңдеу</a></div></article>
+  {% else %}<p class="empty">Әзірге қабылдау бағыты қосылмаған.</p>{% endfor %}
+</div>
+{% endblock %}
